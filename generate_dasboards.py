@@ -6,7 +6,7 @@ TemplateFile="./templates/node_exporter_dashboard.json"
 GrafanaDashPath="/var/lib/grafana/dashboards"
 GrafanaUID=pwd.getpwnam("grafana").pw_uid
 GrafanaGID=grp.getgrnam("grafana").gr_gid
-HDPDashPath=GrafanaDashPath+"/hdp"
+MYDashPath=GrafanaDashPath+"/mydashboards"
 
 def createDirNPermissions(dirin):
     if not os.path.exists(dirin):
@@ -27,13 +27,13 @@ def replaceInFile(fin,key,val):
            f.write(line)
 
 createDirNPermissions(GrafanaDashPath)
-createDirNPermissions(HDPDashPath)
+createDirNPermissions(MYDashPath)
 
 ec2 = boto3.client('ec2')
 filters = [
     {
-        'Name': 'tag:opsworks:stack',
-        'Values': ['edp-prod01-ops-stack']
+        'Name': 'tag:MACHINETAGKEY',
+        'Values': ['MACHINESTAGVAL']
     }
 ]
 list_instances=json.dumps(ec2.describe_instances(Filters=filters), indent=4, sort_keys=True, default=str)
@@ -49,7 +49,7 @@ for reservations in data['Reservations']:
                iName = iName.replace(" ","")
                iPrivateDNS = instance['PrivateDnsName']
                dashUid = randomString(10)
-               path=HDPDashPath+"/"+iName+"-dashboards.json"
+               path=MYDashPath+"/"+iName+"-dashboards.json"
                copyfile(TemplateFile,path)
                os.chown(path,GrafanaUID,GrafanaGID)
                Replacements={'MACHINENAME': iName, 'MACHINEIPADDR': iPrivateDNS, 'DASHBOARDUID': dashUid}
